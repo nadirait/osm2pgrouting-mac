@@ -1,6 +1,6 @@
 /***************************************************************************
- *   Copyright (C) 2008 by Daniel Wendt   								   *
- *   gentoo.murray@gmail.com   											   *
+ *   Copyright (C) 2008 by Daniel Wendt   				   *
+ *   gentoo.murray@gmail.com   						   *
  *                                                                         *
  *   This program is free software; you can redistribute it and/or modify  *
  *   it under the terms of the GNU General Public License as published by  *
@@ -71,7 +71,7 @@ int Export2DB::connect()
 
 void Export2DB::createTables()
 {
-	PGresult *result = PQexec(mycon, "CREATE TABLE nodes (ID integer PRIMARY KEY,  lon decimal(11,8), lat decimal(11,8), numOfUse smallint);");
+	PGresult *result = PQexec(mycon, "CREATE TABLE nodes (ID bigint PRIMARY KEY,  lon decimal(11,8), lat decimal(11,8), numOfUse smallint);");
 	if (PQresultStatus(result) != PGRES_COMMAND_OK)
         {
                 std::cerr << "create Nodes failed: " 
@@ -81,7 +81,7 @@ void Export2DB::createTables()
         }
 
 	std::cout << "Nodes table created" << std::endl;
-	result = PQexec(mycon, "CREATE TABLE ways (gid integer, class_id integer not null, length double precision, name char(200), x1 double precision, y1 double precision, x2 double precision,y2 double precision, reverse_cost double precision,rule text, to_cost double precision, osm_id integer); SELECT AddGeometryColumn('ways','the_geom',4326,'MULTILINESTRING',2);");
+	result = PQexec(mycon, "CREATE TABLE ways (gid bigint, class_id bigint not null, length double precision, name char(200), x1 double precision, y1 double precision, x2 double precision,y2 double precision, reverse_cost double precision,rule text, to_cost double precision, osm_id bigint); SELECT AddGeometryColumn('ways','the_geom',4326,'MULTILINESTRING',2);");
 	if (PQresultStatus(result) != PGRES_COMMAND_OK)
         {
 				 std::cerr << PQresultStatus(result);
@@ -92,7 +92,7 @@ void Export2DB::createTables()
         } else {
 		std::cout << "Ways table created" << std::endl;
 	}
-	result = PQexec(mycon, "CREATE TABLE types (id integer, name char(200));");
+	result = PQexec(mycon, "CREATE TABLE types (id bigint, name char(200));");
 	if (PQresultStatus(result) != PGRES_COMMAND_OK)
         {
                 std::cerr << "create types failed: " 
@@ -103,7 +103,7 @@ void Export2DB::createTables()
 		std::cout << "Types table created" << std::endl;
 	}
 	
-	result = PQexec(mycon, "CREATE TABLE way_tag (type_id integer, class_id integer, way_id integer);");
+	result = PQexec(mycon, "CREATE TABLE way_tag (type_id bigint, class_id bigint, way_id bigint);");
 	if (PQresultStatus(result) != PGRES_COMMAND_OK)
         {
                 std::cerr << "create way_tag failed: " 
@@ -114,7 +114,7 @@ void Export2DB::createTables()
 		std::cout << "Way_tag table created" << std::endl;	
 	}
 
-	result = PQexec(mycon, "CREATE TABLE relations (relation_id integer, type_id integer, class_id integer, name character varying(200));");
+	result = PQexec(mycon, "CREATE TABLE relations (relation_id bigint, type_id bigint, class_id bigint, name character varying(200));");
     if (PQresultStatus(result) != PGRES_COMMAND_OK)
         {
                 std::cerr << "create relations failed: "
@@ -125,7 +125,7 @@ void Export2DB::createTables()
         	std::cout << "Relations table created" << std::endl;
     	}
     	
-    result = PQexec(mycon, "CREATE TABLE relation_ways (relation_id integer, way_id integer, type character varying(200));");
+    result = PQexec(mycon, "CREATE TABLE relation_ways (relation_id bigint, way_id bigint, type character varying(200));");
     if (PQresultStatus(result) != PGRES_COMMAND_OK)
         {
                 std::cerr << "create relation_ways failed: "
@@ -136,7 +136,7 @@ void Export2DB::createTables()
         	std::cout << "Relation_ways table created" << std::endl;
     	}
 	
-	result = PQexec(mycon, "CREATE TABLE classes (id integer, type_id integer, name char(200), cost double precision);");
+	result = PQexec(mycon, "CREATE TABLE classes (id bigint, type_id bigint, name char(200), cost double precision);");
 	if (PQresultStatus(result) != PGRES_COMMAND_OK)
         {
                 std::cerr << "create classes failed: " 
@@ -362,11 +362,11 @@ void Export2DB::exportTypesWithClasses(std::map<std::string, Type*>& types)
 
 void Export2DB::createTopology()
 {
-	PGresult *result = PQexec(mycon,"ALTER TABLE ways ADD COLUMN source integer;");
-	result = PQexec(mycon,"ALTER TABLE ways ADD COLUMN target integer;");
+	PGresult *result = PQexec(mycon,"ALTER TABLE ways ADD COLUMN source bigint;");
+	result = PQexec(mycon,"ALTER TABLE ways ADD COLUMN target bigint;");
 	result = PQexec(mycon,"CREATE INDEX source_idx ON ways(source);");
 	result = PQexec(mycon,"CREATE INDEX target_idx ON ways(target);");
-    result = PQexec(mycon,"CREATE INDEX geom_idx ON ways USING GIST(the_geom GIST_GEOMETRY_OPS);");
+	result = PQexec(mycon,"CREATE INDEX geom_idx ON ways USING GIST(the_geom GIST_GEOMETRY_OPS);");
 	result = PQexec(mycon,"CREATE UNIQUE INDEX ways_gid_idx ON ways(gid);");
 	result = PQexec(mycon,"SELECT assign_vertex_id('ways', 0.00001, 'the_geom', 'gid');");
 	
