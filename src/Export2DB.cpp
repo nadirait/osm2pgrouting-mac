@@ -1,6 +1,6 @@
 /***************************************************************************
- *   Copyright (C) 2008 by Daniel Wendt   				   *
- *   gentoo.murray@gmail.com   						   *
+ *   Copyright (C) 2008 by Daniel Wendt   				  				   *
+ *   gentoo.murray@gmail.com   						  					   *
  *                                                                         *
  *   This program is free software; you can redistribute it and/or modify  *
  *   it under the terms of the GNU General Public License as published by  *
@@ -84,8 +84,8 @@ void Export2DB::createTables()
 	result = PQexec(mycon, "CREATE TABLE ways (gid bigint, class_id bigint not null, length double precision, name char(200), x1 double precision, y1 double precision, x2 double precision,y2 double precision, reverse_cost double precision,rule text, to_cost double precision, osm_id bigint); SELECT AddGeometryColumn('ways','the_geom',4326,'MULTILINESTRING',2);");
 	if (PQresultStatus(result) != PGRES_COMMAND_OK)
         {
-				 std::cerr << PQresultStatus(result);
-                std::cerr << "create ways failed: " 
+				std::cerr << PQresultStatus(result);
+                std::cerr << " create ways failed: " 
 			<< PQerrorMessage(mycon) 
 			<< std::endl;
                 PQclear(result);
@@ -362,12 +362,11 @@ void Export2DB::exportTypesWithClasses(std::map<std::string, Type*>& types)
 
 void Export2DB::createTopology()
 {
-	PGresult *result = PQexec(mycon,"ALTER TABLE ways ADD COLUMN source bigint;");
-	result = PQexec(mycon,"ALTER TABLE ways ADD COLUMN target bigint;");
+	PGresult *result = PQexec(mycon,"ALTER TABLE ways ADD COLUMN source integer;");
+	result = PQexec(mycon,"ALTER TABLE ways ADD COLUMN target integer;");
 	result = PQexec(mycon,"CREATE INDEX source_idx ON ways(source);");
 	result = PQexec(mycon,"CREATE INDEX target_idx ON ways(target);");
-	result = PQexec(mycon,"CREATE INDEX geom_idx ON ways USING GIST(the_geom GIST_GEOMETRY_OPS);");
+    result = PQexec(mycon,"CREATE INDEX geom_idx ON ways USING GIST(the_geom gist_geometry_ops_nd);");
 	result = PQexec(mycon,"CREATE UNIQUE INDEX ways_gid_idx ON ways(gid);");
-	result = PQexec(mycon,"SELECT assign_vertex_id('ways', 0.00001, 'the_geom', 'gid');");
-	
+	result = PQexec(mycon,"SELECT pgr_createTopology('ways', 0.00001, 'the_geom', 'gid')");	
 }
